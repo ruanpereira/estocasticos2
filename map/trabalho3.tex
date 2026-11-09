@@ -1,0 +1,167 @@
+\documentclass[11pt, a4paper]{article}
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\usepackage{fontspec}
+\usepackage[english, portuguese, bidi=basic, provide=*]{babel}
+\babelprovide[import, onchar=ids fonts]{portuguese}
+\babelfont{rm}{Noto Sans}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+\title{\textbf{Relatório do Trabalho Teórico/Computacional}\\ \Large Estimação de Máximo a Posteriori (MAP) e Regressão Regularizada}
+\author{Ruan Pereira Alves 569551}
+\date{30 de novembro de 2026}
+
+\begin{document}
+
+\maketitle
+
+\section{Questão 01: Estimativa MAP da Média de Atributos Gaussianos}
+
+\subsection{Fundamentação Teórica}
+Dada uma coleção de $N$ amostras independentes e identicamente distribuídas (i.i.d.) referentes ao atributo \texttt{MonthlyCharges}, denotadas por $\mathcal{D} = \{x_1, x_2, \dots, x_N\}$, assume-se um modelo de verossimilhança gaussiano $x_i \sim \mathcal{N}(\mu, \sigma^2)$ com variância $\sigma^2$ conhecida. A função de verossimilhança é dada por:
+\begin{equation}
+p(\mathcal{D}|\mu) = \prod_{i=1}^{N} \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left( -\frac{(x_i - \mu)^2}{2\sigma^2} \right)
+\end{equation}
+
+Assumindo um conhecimento prévio probabilístico (prior) sob a forma de uma distribuição gaussiana para o parâmetro de média $\mu \sim \mathcal{N}(\mu_0, \sigma_\mu^2)$, a densidade a priori é expressa como:
+\begin{equation}
+p(\mu) = \frac{1}{\sqrt{2\pi\sigma_\mu^2}} \exp\left( -\frac{(\mu - \mu_0)^2}{2\sigma_\mu^2} \right)
+\end{equation}
+
+Pelo Teorema de Bayes, a distribuição a posteriori $p(\mu|\mathcal{D}) \propto p(\mathcal{D}|\mu) p(\mu)$ sob a aplicação do logaritmo resulta na log-posteriori:
+\begin{equation}
+\log p(\mu|\mathcal{D}) = -\frac{1}{2\sigma^2} \sum_{i=1}^{N} (x_i - \mu)^2 - \frac{1}{2\sigma_\mu^2} (\mu - \mu_0)^2 + C
+\end{equation}
+em que $C$ reúne os termos constantes que não dependem de $\mu$. O estimador de Máximo a Posteriori ($\hat{\mu}_{\text{MAP}}$) é obtido minimizando a função de perda logarítmica:
+\begin{equation}
+\mathcal{L}(\mu) = \frac{1}{2\sigma^2} \sum_{i=1}^{N} (x_i - \mu)^2 + \frac{1}{2\sigma_\mu^2} (\mu - \mu_0)^2
+\end{equation}
+
+Derivando $\mathcal{L}(\mu)$ em relação a $\mu$ e igualando a zero ($\frac{d\mathcal{L}}{d\mu} = 0$), obtém-se:
+\begin{equation}
+-\frac{1}{\sigma^2} \sum_{i=1}^{N} (x_i - \mu) - \frac{1}{\sigma_\mu^2} (\mu - \mu_0) = 0 \implies \frac{N}{\sigma^2} (\mu - \bar{x}) + \frac{1}{\sigma_\mu^2} (\mu - \mu_0) = 0
+\end{equation}
+onde $\bar{x} = \frac{1}{N} \sum_{i=1}^{N} x_i$ é a média amostral (solução de Máxima Verossimilhança $\hat{\mu}_{\text{MV}}$). Isolando $\mu$, chega-se à expressão analítica do estimador MAP:
+\begin{equation}
+\hat{\mu}_{\text{MAP}} = \frac{\frac{N}{\sigma^2}\bar{x} + \frac{1}{\sigma_\mu^2}\mu_0}{\frac{N}{\sigma^2} + \frac{1}{\sigma_\mu^2}} = w \bar{x} + (1-w) \mu_0, \quad \text{com } w = \frac{N\sigma_\mu^2}{N\sigma_\mu^2 + \sigma^2}
+\end{equation}
+
+\subsection{Resultados e Discussão}
+Para o atributo \texttt{MonthlyCharges} do dataset com $N = 7043$ amostras, foram calculados a média amostral $\bar{x} = 64{,}7617$ e a variância amostral $\sigma^2 = 905{,}4109$. Considerando o prior com $\mu_0 = 60$ e variâncias $\sigma_\mu^2 \in \{5, 10, 20, 50\}$, os resultados são resumidos na Tabela 1.
+
+\begin{table}[H]
+\centering
+\caption{Estimativas MAP da média de \texttt{MonthlyCharges} para diferentes variâncias do prior ($\mu_0 = 60$, $N = 7043$).}
+\begin{tabular}{cccc}
+\toprule
+Variância do Prior ($\sigma_\mu^2$) & Peso dos Dados ($w$) & Média MAP ($\hat{\mu}_{\text{MAP}}$) & Média MV ($\hat{\mu}_{\text{MV}}$) \\
+\midrule
+5  & 0{,}974966 & 64{,}6422 & 64{,}7617 \\
+10 & 0{,}987284 & 64{,}7018 & 64{,}7617 \\
+20 & 0{,}993601 & 64{,}7315 & 64{,}7617 \\
+50 & 0{,}997434 & 64{,}7495 & 64{,}7617 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Análise do impacto da variância do prior:}
+\begin{enumerate}
+    \item \textbf{Dominância da Evidência Amostral:} Devido ao elevado número de amostras ($N = 7043$), o fator de ponderação $w \to 1$. Isso confirma que quanto maior o volume de dados, menor é a dependência da estimativa em relação à crença inicial.
+    \item \textbf{Efeito de Atração do Prior:} Para valores menores de $\sigma_\mu^2$ (ex.: $\sigma_\mu^2 = 5$), o prior demonstra maior grau de certeza, deslocando a estimativa de forma mais incisiva em direção a $\mu_0 = 60$. À medida que $\sigma_\mu^2$ cresce, a incerteza do prior aumenta e a estimativa MAP converge assintoticamente para a solução de máxima verossimilhança $\bar{x}$.
+\end{enumerate}
+
+\section{Questão 02: Regressão Linear Simples via Máxima Verossimilhança}
+
+\subsection{Fundamentação Teórica}
+Deseja-se prever a variável dependente $U$ (\texttt{TotalCharges}) a partir das variáveis independentes $G$ (\texttt{tenure}) e $T$ (\texttt{MonthlyCharges}). O modelo de regressão linear é definido por:
+\begin{equation}
+y_i = w_0 + w_1 x_{i1} + w_2 x_{i2} + e_i, \quad e_i \sim \mathcal{N}(0, \sigma_e^2)
+\end{equation}
+onde $\mathbf{x}_i = [x_{i1}, x_{i2}]^T$ representam os atributos de \texttt{tenure} e \texttt{MonthlyCharges}, respectivamente. Na abordagem por Mínimos Quadrados Ordinários (OLS) / Máxima Verossimilhança (MV), os coeficientes $\mathbf{w}_{\text{MV}} = [w_0, w_1, w_2]^T$ são obtidos minimizando o Erro Quadrático Médio (MSE) no conjunto de treino:
+\begin{equation}
+\text{MSE} = \frac{1}{N_{\text{treino}}} \sum_{i=1}^{N_{\text{treino}}} (y_i - \hat{y}_i)^2 = \frac{1}{N_{\text{treino}}} \|\mathbf{y} - \mathbf{X}\mathbf{w}\|_2^2
+\end{equation}
+
+\subsection{Resultados e Discussão}
+O conjunto de dados tratados ($N = 7032$ amostras válidas) foi dividido aleatoriamente em 80\% para treinamento ($N_{\text{treino}} = 5625$) e 20\% para teste ($N_{\text{teste}} = 1407$). Os coeficientes ajustados e os erros quadráticos médios obtidos são apresentados a seguir:
+
+\begin{table}[H]
+\centering
+\caption{Desempenho da Regressão Linear Simples (Máxima Verossimilhança).}
+\begin{tabular}{l c}
+\toprule
+Parâmetro / Métrica & Valor Estimado \\
+\midrule
+Coeficiente \texttt{tenure} ($w_1$) & $65{,}3435$ \\
+Coeficiente \texttt{MonthlyCharges} ($w_2$) & $19{,}7414$ \\
+Intercepto ($w_0$) & $-1971{,}5561$ \\
+MSE - Treinamento & $474811{,}23$ \\
+MSE - Teste & $447720{,}82$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A magnitude elevada dos coeficientes $w_1$ e $w_2$ reflete a escala original dos atributos em meses e unidades monetárias. O MSE obtido no conjunto de teste é comparável ao de treinamento, indicando ausência de subajuste (*underfitting*) ou sobreajuste (*overfitting*) severo na solução não regularizada.
+
+\section{Questão 03: Regressão Linear Regularizada sob Interpretação MAP}
+
+\subsection{Fundamentação Teórica}
+Incorporando uma crença prévia gaussiana com média nula sobre os vetores de pesos $\mathbf{w} \sim \mathcal{N}(\mathbf{0}, \sigma_w^2 \mathbf{I})$, a distribuição a priori é dada por:
+\begin{equation}
+p(\mathbf{w}) = \left(\frac{1}{2\pi\sigma_w^2}\right)^{d/2} \exp\left( -\frac{\|\mathbf{w}\|_2^2}{2\sigma_w^2} \right)
+\end{equation}
+
+A maximização da densidade a posteriori equivale à minimização da função objetivo penalizada:
+\begin{equation}
+\mathcal{L}_{\text{MAP}}(\mathbf{w}) = -\log p(\mathcal{D}|\mathbf{w}) - \log p(\mathbf{w}) = \frac{1}{2\sigma_e^2} \|\mathbf{y} - \mathbf{X}\mathbf{w}\|_2^2 + \frac{1}{2\sigma_w^2} \|\mathbf{w}\|_2^2
+\end{equation}
+
+Multiplicando a expressão por $\sigma_e^2$, a minimização torna-se equivalente à **Regressão Ridge (Regularização $L_2$)**:
+\begin{equation}
+\hat{\mathbf{w}}_{\text{MAP}} = \arg\min_{\mathbf{w}} \left( \|\mathbf{y} - \mathbf{X}\mathbf{w}\|_2^2 + \lambda \|\mathbf{w}\|_2^2 \right), \quad \text{onde } \lambda = \frac{\sigma_e^2}{\sigma_w^2}
+\end{equation}
+em que $\sigma_e^2$ representa a variância do ruído dos dados (estimada a partir do MSE de treino do modelo OLS, $\sigma_e^2 \approx 474811{,}23$).
+
+\subsection{Resultados e Análise dos Parâmetros}
+A Tabela 2 apresenta a variação dos coeficientes e do desempenho do modelo para variâncias do prior $\sigma_w^2 \in \{1, 2, 5, 10\}$.
+
+\begin{table}[H]
+\centering
+\caption{Parâmetros e erros da Regressão Ridge / MAP em função da variância do prior $\sigma_w^2$.}
+\begin{tabular}{cccccc}
+\toprule
+$\sigma_w^2$ & Fator $\lambda$ ($\alpha$) & $w_1$ (\texttt{tenure}) & $w_2$ (\texttt{Monthly}) & MSE Treino & MSE Teste \\
+\midrule
+1  & 474811{,}2 & 56{,}7707 & 21{,}8641 & 483321{,}45 & 454521{,}12 \\
+2  & 237405{,}6 & 60{,}6371 & 20{,}9052 & 477123{,}89 & 449490{,}55 \\
+5  & 94962{,}2  & 63{,}3206 & 20{,}2412 & 475210{,}15 & 448012{,}30 \\
+10 & 47481{,}1  & 64{,}3051 & 19{,}9964 & 474912{,}04 & 447798{,}45 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Diferenças em função da variância do prior ($\sigma_w^2$):}
+\begin{enumerate}
+    \item \textbf{Efeito de Regularização (*Weight Decay*):} Uma variância restritiva ($\sigma_w^2 = 1$) gera um fator de penalização $\lambda$ elevado, encolhendo fortemente os coeficientes em direção à origem ($w_1$ reduz de $65{,}34$ para $56{,}77$).
+    \item \textbf{Convergência para MV:} À medida que $\sigma_w^2$ aumenta para $10$, a penalização $\lambda \propto \frac{1}{\sigma_w^2}$ torna-se negligenciável, fazendo com que os coeficientes e o erro de teste convirjam exatamente para os valores da regressão linear simples não regularizada (solução MV da Questão 02).
+\end{enumerate}
+
+\section{Declaração de Uso de Ferramentas de Inteligência Artificial}
+Em conformidade com as diretrizes acadêmicas, declara-se que ferramentas de Inteligência Artificial Generativa foram empregadas exclusivamente como suporte instrumental nas seguintes etapas:
+\begin{enumerate}
+    \item \textbf{Auxílio e Correção de Códigos:} Suporte na verificação e vetorização dos algoritmos em Python (utilizando as bibliotecas \texttt{numpy}, \texttt{pandas} e \texttt{scikit-learn}).
+    \item \textbf{Revisão Ortográfica e Formatação:} Auxílio na revisão textual e na estruturação de equações matematicamente rigorosas no ambiente \LaTeX.
+\end{enumerate}
+
+\end{document}
