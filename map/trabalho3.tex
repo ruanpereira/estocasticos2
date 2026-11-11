@@ -1,40 +1,70 @@
-\documentclass[11pt, a4paper]{article}
-\usepackage[a4paper, margin=2.5cm]{geometry}
-\usepackage{fontspec}
-\usepackage[english, portuguese, bidi=basic, provide=*]{babel}
-\babelprovide[import, onchar=ids fonts]{portuguese}
-\babelfont{rm}{Noto Sans}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{booktabs}
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[brazilian]{babel}
+\usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
 \usepackage{float}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
 \usepackage{hyperref}
 
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    citecolor=blue,
-    urlcolor=blue
-}
+\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
 
-\title{\textbf{Relatório do Trabalho Teórico/Computacional}\\ \Large Estimação de Máximo a Posteriori (MAP) e Regressão Regularizada}
-\author{Ruan Pereira Alves 569551}
-\date{30 de novembro de 2026}
+% Configuração de exibição de código em Python
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.96,0.96,0.96}
+
+\lstdefinestyle{pystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=pystyle}
+
 
 \begin{document}
 
-\maketitle
+% --- CABEÇALHO COM LOGÓTIPO DA UFC ---
+\begin{center}
+    % Substitua 'logo_ufc.png' pelo nome exato da imagem no seu diretório
+    \includegraphics[width=3cm]{logoufc.png} \\[0.3cm] 
+    {\small \textbf{UNIVERSIDADE FEDERAL DO CEARÁ}}\\[0.1cm]
+    {\small \textbf{DEPARTAMENTO DE ENGENHARIA DE TELEINFORMÁTICA}}\\[0.5cm]
+    
+    {\Large Relatório do Trabalho Teórico/Computacional}\\[0.2cm]
+    {\large Maximização da propriedade a posteriori}\\[0.4cm]
+    
+    Ruan Pereira Alves -- 569551\\[0.1cm]
+    \small 11 de novembro de 2026
+\end{center}
 
 \section{Questão 01: Estimativa MAP da Média de Atributos Gaussianos}
 
 \subsection{Fundamentação Teórica}
-Dada uma coleção de $N$ amostras independentes e identicamente distribuídas (i.i.d.) referentes ao atributo \texttt{MonthlyCharges}, denotadas por $\mathcal{D} = \{x_1, x_2, \dots, x_N\}$, assume-se um modelo de verossimilhança gaussiano $x_i \sim \mathcal{N}(\mu, \sigma^2)$ com variância $\sigma^2$ conhecida. A função de verossimilhança é dada por:
+
+Considerando os dados referentes ao atributo \texttt{MonthlyCharges} extraído, denotadas por $\mathcal{D} = \{x_1, x_2, \dots, x_N\}$, assume-se um modelo de verossimilhança gaussiano $x_i \sim \mathcal{N}(\mu, \sigma^2)$ com variância $\sigma^2$ conhecida. A função de verossimilhança é dada por:
 \begin{equation}
 p(\mathcal{D}|\mu) = \prod_{i=1}^{N} \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left( -\frac{(x_i - \mu)^2}{2\sigma^2} \right)
 \end{equation}
 
-Assumindo um conhecimento prévio probabilístico (prior) sob a forma de uma distribuição gaussiana para o parâmetro de média $\mu \sim \mathcal{N}(\mu_0, \sigma_\mu^2)$, a densidade a priori é expressa como:
+Assumindo um conhecimento prévio probabilístico (prior) sob a forma de uma distribuição gaussiana para o parâmetro de média $\mu \sim \mathcal{N}(\mu_0, \sigma_\mu^2)$, a densidade a priori vai ser expressa como:
 \begin{equation}
 p(\mu) = \frac{1}{\sqrt{2\pi\sigma_\mu^2}} \exp\left( -\frac{(\mu - \mu_0)^2}{2\sigma_\mu^2} \right)
 \end{equation}
@@ -81,6 +111,13 @@ Variância do Prior ($\sigma_\mu^2$) & Peso dos Dados ($w$) & Média MAP ($\hat{
     \item \textbf{Efeito de Atração do Prior:} Para valores menores de $\sigma_\mu^2$ (ex.: $\sigma_\mu^2 = 5$), o prior demonstra maior grau de certeza, deslocando a estimativa de forma mais incisiva em direção a $\mu_0 = 60$. À medida que $\sigma_\mu^2$ cresce, a incerteza do prior aumenta e a estimativa MAP converge assintoticamente para a solução de máxima verossimilhança $\bar{x}$.
 \end{enumerate}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{grafico_questao1.png}
+    \caption{Feito pelo autor.}
+    \label{fig:questao1}
+\end{figure}
+
 \section{Questão 02: Regressão Linear Simples via Máxima Verossimilhança}
 
 \subsection{Fundamentação Teórica}
@@ -113,6 +150,13 @@ MSE - Teste & $447720{,}82$ \\
 \end{table}
 
 A magnitude elevada dos coeficientes $w_1$ e $w_2$ reflete a escala original dos atributos em meses e unidades monetárias. O MSE obtido no conjunto de teste é comparável ao de treinamento, indicando ausência de subajuste (*underfitting*) ou sobreajuste (*overfitting*) severo na solução não regularizada.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{grafico_questao2.png}
+    \caption{Feito pelo autor.}
+    \label{fig:questao1}
+\end{figure}
 
 \section{Questão 03: Regressão Linear Regularizada sob Interpretação MAP}
 
@@ -157,11 +201,20 @@ $\sigma_w^2$ & Fator $\lambda$ ($\alpha$) & $w_1$ (\texttt{tenure}) & $w_2$ (\te
     \item \textbf{Convergência para MV:} À medida que $\sigma_w^2$ aumenta para $10$, a penalização $\lambda \propto \frac{1}{\sigma_w^2}$ torna-se negligenciável, fazendo com que os coeficientes e o erro de teste convirjam exatamente para os valores da regressão linear simples não regularizada (solução MV da Questão 02).
 \end{enumerate}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{grafico_questao3.png}
+    \caption{Feito pelo autor.}
+    \label{fig:questao1}
+\end{figure}
+
+
 \section{Declaração de Uso de Ferramentas de Inteligência Artificial}
-Em conformidade com as diretrizes acadêmicas, declara-se que ferramentas de Inteligência Artificial Generativa foram empregadas exclusivamente como suporte instrumental nas seguintes etapas:
+Em conformidade com as diretrizes acadêmicas, declara-se que o \textbf{Gemini} foi empregado exclusivamente como suporte instrumental nas seguintes etapas:
 \begin{enumerate}
-    \item \textbf{Auxílio e Correção de Códigos:} Suporte na verificação e vetorização dos algoritmos em Python (utilizando as bibliotecas \texttt{numpy}, \texttt{pandas} e \texttt{scikit-learn}).
+    \item \textbf{Auxílio e Correção de Códigos:} Suporte na verificação de sintaxe e vetorização dos algoritmos em Python (utilizando as bibliotecas \texttt{numpy}, \texttt{pandas} e \texttt{scikit-learn}, quanto ao modelo Ridge).
     \item \textbf{Revisão Ortográfica e Formatação:} Auxílio na revisão textual e na estruturação de equações matematicamente rigorosas no ambiente \LaTeX.
+    \item \textbf{Formatação e Redação Técnica:} Suporte na estruturação do documento em ambiente \LaTeX{}, formatação das equações matemáticas conforme as notas de aula da disciplina e revisão gramatical e ortográfica da linguagem técnica utilizada.
 \end{enumerate}
 
 \end{document}
